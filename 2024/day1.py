@@ -1,6 +1,6 @@
 def main():
     # Define the path to the input file
-    file_path = 'advent1input.txt'
+    file_path = 'day1input.txt'
 
     # Initialize two empty lists
     list1 = []
@@ -23,9 +23,14 @@ def main():
     # Calculate the sum of the absolute values of the distances
     total_distance = sum(abs(a - b) for a, b in zip(list1, list2))
 
-    # Print the lists and the total distance to verify the result
+    # Calculate the similarity score
+    similarity_score = 0
+    for num in list1:
+        similarity_score += num * list2.count(num)
 
+    # Print the total distance, and similarity score to verify the result
     print("Total Distance:", total_distance)
+    print("Similarity Score:", similarity_score)
 
 if __name__ == "__main__":
     main()
