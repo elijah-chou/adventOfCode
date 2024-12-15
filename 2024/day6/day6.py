@@ -20,37 +20,39 @@ def move_guard(map_grid, start_pos, start_dir):
     direction = start_dir
     visited = set()
     visited.add((x, y))
-    
+    direction_changes = []
+
     while True:
         next_x, next_y = x + direction[0], y + direction[1]
         if not (0 <= next_x < len(map_grid[0]) and 0 <= next_y < len(map_grid)):
             break
         if map_grid[next_y][next_x] == '#':
             direction = turn_right(direction)
+            direction_changes.append((x, y))
         else:
             x, y = next_x, next_y
             visited.add((x, y))
     
-    return visited
+    return visited, direction_changes
 
 def count_visited_positions(map_str):
     map_grid = parse_map(map_str)
     start_pos, start_dir = find_guard(map_grid)
-    visited_positions = move_guard(map_grid, start_pos, start_dir)
+    visited_positions, _ = move_guard(map_grid, start_pos, start_dir)
     return len(visited_positions)
 
 def count_loop_positions(map_str):
     map_grid = parse_map(map_str)
     start_pos, start_dir = find_guard(map_grid)
-    visited_positions = move_guard(map_grid, start_pos, start_dir)
+    visited_positions, direction_changes = move_guard(map_grid, start_pos, start_dir)
     
     loop_positions = set()
-    for pos in visited_positions:
+    for pos in direction_changes:
         if pos == start_pos:
             continue
         x, y = pos
         map_grid[y][x] = '#'
-        new_visited_positions = move_guard(map_grid, start_pos, start_dir)
+        new_visited_positions, _ = move_guard(map_grid, start_pos, start_dir)
         if len(new_visited_positions) < len(visited_positions):
             loop_positions.add(pos)
         map_grid[y][x] = '.'
