@@ -1,58 +1,61 @@
-def solve_disk_compaction(disk_map):
-    """
-    Solve the disk compaction puzzle with a memory-efficient approach.
-    
-    Args:
-        disk_map (str): Disk map string
-    
-    Returns:
-        int: Filesystem checksum
-    """
-    # Parse the disk map
-    blocks = []
-    i = 0
+def main():
+    with open('2024/day9/day9input.txt') as f:
+        disk_map_str = f.read().strip()
+    lengths = [int(ch) for ch in disk_map_str]
+    disk = []
+    file_id = 0
     is_file = True
-    while i < len(disk_map):
-        # Extract the length of current block
-        j = i
-        while j < len(disk_map) and disk_map[j].isdigit():
-            j += 1
-        
-        length = int(disk_map[i:j])
-        blocks.append((length, is_file))
-        
-        # Alternate between file and free space
+    idx = 0
+    while idx < len(lengths):
+        length = lengths[idx]
+        if is_file:
+            disk.extend([file_id] * length)
+            file_id += 1
+        else:
+            disk.extend(['.'] * length)
         is_file = not is_file
-        i = j
-    
-    # Track file positions and calculate checksum simultaneously
-    current_free_pos = 0
-    checksum = 0
-    file_ids = {}
-    
-    for file_id, (length, is_file) in enumerate(blocks):
-        if not is_file:
-            # Skip free space blocks
-            current_free_pos += length
-            continue
-        
-        # Store the original starting position of this file
-        original_start = current_free_pos
-        file_ids[file_id] = original_start
-        
-        # Calculate checksum contribution for this file's blocks
-        for block_offset in range(length):
-            block_pos = original_start + block_offset
-            checksum += block_pos * file_id
-        
-        # Move to next free position
-        current_free_pos += length
-    
-    return checksum
+        idx += 1
 
-# Example usage
-print(f"Checksum for 12345: {solve_disk_compaction('12345')}")
+    max_file_id = file_id - 1
+    # Build file positions
+    file_positions = {}
+    for idx, block in enumerate(disk):
+        if block != '.':
+            file_positions.setdefault(block, []).append(idx)
+    # Move files in decreasing file ID
+    for fid in range(max_file_id, -1, -1):
+        positions = file_positions[fid]
+        file_length = len(positions)
+        file_start = positions[0]
+        # Find leftmost suitable space before the file
+        leftmost_pos = None
+        idx = 0
+        while idx < file_start:
+            if disk[idx] == '.':
+                # Check if there's a span of free space
+                span_start = idx
+                span_end = idx
+                while span_end < file_start and disk[span_end] == '.':
+                    span_end += 1
+                span_length = span_end - span_start
+                if span_length >= file_length:
+                    leftmost_pos = span_start
+                    break
+                idx = span_end
+            else:
+                idx += 1
+        if leftmost_pos is not None:
+            # Move the file
+            # Clear old positions
+            for pos in positions:
+                disk[pos] = '.'
+            # Update positions
+            new_positions = list(range(leftmost_pos, leftmost_pos + file_length))
+            for pos in new_positions:
+                disk[pos] = fid
+            file_positions[fid] = new_positions
+    checksum = sum(position * block for position, block in enumerate(disk) if block != '.')
+    print(checksum)
 
-# Puzzle input disk map
-puzzle_input = "2333133121414131402"
-print(f"Checksum for puzzle input: {solve_disk_compaction(puzzle_input)}")
+if __name__ == '__main__':
+    main()
